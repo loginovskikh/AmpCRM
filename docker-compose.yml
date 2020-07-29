@@ -1,0 +1,52 @@
+version: '3'
+services:
+    postgres:
+        image: postgres:11
+#        build: Docker/postgres
+        restart: always
+        ports:
+            - '5432:5432'
+        environment:
+            POSTGRES_DB: AmpCRM
+            POSTGRES_USER: postgres
+            POSTGRES_PASSWORD: password
+
+ #       volumes:
+ #           - ./Docker/postgres/pgdata:/var/lib/postgresql/data
+        networks:
+            ampcrm-network:
+                aliases:
+                    - ampcrm-network
+    php:
+        build: Docker/php-fpm
+        restart: always
+        ports:
+            - '9000:9000'
+        volumes:
+            - ./:/var/www/AmplifierCRM
+            #- ./php/local.ini:/usr/local/etc/php/conf.d/local.ini
+        working_dir: /var/www/AmplifierCRM
+        links:
+            - postgres
+        networks:
+            ampcrm-network:
+                aliases:
+                    - ampcrm-network
+    nginx:
+        build: Docker/nginx
+        restart: always
+        ports:
+            - '8080:80'
+            - '443:443'
+        links:
+            - php
+        volumes:
+            - ./:/var/www/AmplifierCRM
+            - ./nginxlog:/var/log/nginx
+        networks:
+            ampcrm-network:
+                aliases:
+                    - ampcrm-network
+networks:
+    ampcrm-network:
+        driver: bridge
